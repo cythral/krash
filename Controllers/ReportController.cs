@@ -15,11 +15,9 @@ namespace krash.Controllers {
     [ApiController]
     public class ValuesController : ControllerBase {
         private GitHubClient githubClient;
-        private GithubOptions githubOptions;
 
-        public ValuesController(GitHubClient githubClient, GithubOptions githubOptions) {
+        public ValuesController(GitHubClient githubClient) {
             this.githubClient = githubClient;
-            this.githubOptions = githubOptions;
         }
 
         [HttpPost]
@@ -35,7 +33,7 @@ namespace krash.Controllers {
             newIssue.Body = report.ToString();
             newIssue.Labels.Add("crash");
 
-            var issue = await githubClient.Issue.Create(githubOptions.User, report.repo, newIssue);
+            var issue = await githubClient.Issue.Create(CredentialProvider.githubUser, report.repo, newIssue);
             return issue;
         }
     }

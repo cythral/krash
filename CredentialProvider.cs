@@ -7,5 +7,11 @@ namespace krash {
                 return Environment.GetEnvironmentVariable("KRASH_GITHUB_TOKEN");
             }
         }
+
+        static public string githubUser {
+            get {
+                return Environment.GetEnvironmentVariable("KRASH_GITHUB_USER");
+            }
+        }
     }
 }
