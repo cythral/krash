@@ -27,7 +27,7 @@ namespace krash.Controllers {
             }
             
             report.userAgent = Request.Headers["user-agent"];
-            report.ip = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+            report.ip = Request.Headers["x-forwarded-for"];
             
             var newIssue = new NewIssue($"Crash Report from {report.ip}");
             newIssue.Body = report.ToString();
