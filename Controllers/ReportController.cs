@@ -13,10 +13,10 @@ using Octokit;
 namespace krash.Controllers {
     [Route("report")]
     [ApiController]
-    public class ValuesController : ControllerBase {
+    public class ReportController : ControllerBase {
         private GitHubClient githubClient;
 
-        public ValuesController(GitHubClient githubClient) {
+        public ReportController(GitHubClient githubClient) {
             this.githubClient = githubClient;
         }
 
