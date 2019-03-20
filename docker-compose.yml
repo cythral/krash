@@ -1,0 +1,16 @@
+version: '3.4'
+services:
+  app:
+    image: talenfisher/krash
+    environment:
+      - KRASH_GITHUB_USER
+      - KRASH_GITHUB_TOKEN
+    restart: always
+    networks:
+      default:
+        ipv4_address: ${KRASH_IP}
+
+networks:
+  default:
+    external:
+      name: vila
