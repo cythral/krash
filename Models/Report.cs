@@ -14,11 +14,15 @@ namespace krash.Models {
         public string repo { get; set; }
 
         [Required]
+        public string version { get; set; }
+
+        [Required]
         public IEnumerable<LogItem> log { get; set; }
 
         public override string ToString() {
             string result = $"**IP Address**: {ip}";
             result += $"\n**User Agent**: {userAgent}";
+            result += $"\n**Version**: {version}";
             result += "\n\n| Timestamp | Type | Message | Filename |";
             result += "\n| :--- | :--- | :--- | :--- |";
             
