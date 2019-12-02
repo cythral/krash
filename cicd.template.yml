@@ -151,7 +151,7 @@ Resources:
               Configuration:
                 Owner: !Ref GithubOwner
                 Repo: !Ref GithubRepo
-                Branch: !Ref GithubBranch
+                Branch: CYTHINF-22
                 OAuthToken: !Ref GithubToken
                 PollForSourceChanges: false
         - Name: Build
