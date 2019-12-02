@@ -40,13 +40,13 @@ Resources:
       HostedZoneName: cythral.com.
       RecordSets: 
         - Name: krash.cythral.com
-          Type: A
+          Type: A 
           AliasTarget:
             HostedZoneId: !ImportValue cfn-core:LoadBalancerCanonicalHostedZoneId
             DNSName: !ImportValue cfn-core:LoadBalancerDnsName
         - Name: krash.cythral.com
-          Type: AAAA
-          AliasTarget:
+          Type: AAAA  
+          AliasTarget: 
             HostedZoneId: !ImportValue cfn-core:LoadBalancerCanonicalHostedZoneId
             DNSName: !ImportValue cfn-core:LoadBalancerDnsName
       
