@@ -1,0 +1,156 @@
+Description: Remnisense (memory training/flashcards)
+Parameters:
+  Image:
+    Type: String
+    Description: Docker image to use for the Krash service
+
+  DomainName:
+    Type: String
+    Description: Domain name to use for this deployment of Remnisense
+
+  GithubUser:
+    Type: String
+    Description: The github user to use for posting crash reports
+
+  GithubToken:
+    Type: String
+    NoEcho: true
+    Description: OAuth token for the github user
+
+  ScaleDownOffHours:
+    Type: String
+    Description: Whether or not to scale down the app's ECS services down at 7pm
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+Conditions:
+  ScaleDownOffHours:
+    !Equals 
+      - !Ref ScaleDownOffHours
+      - 'true'
+
+Resources:
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !ImportValue cfn-utilities:HttpListenerArn
+      Priority: 7
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Ref DomainName
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      TargetType: ip
+      VpcId: !ImportValue cfn-utilities:VpcId
+      Protocol: HTTP
+      Port: 80
+      HealthCheckPath: /healthcheck
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref AWS::StackName
+  
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: !Split
+            - ","
+            - !ImportValue cfn-utilities:SubnetIds
+          SecurityGroups:
+            - !ImportValue cfn-utilities:WebSecurityGroupId
+            - !ImportValue cfn-utilities:DatabaseSecurityGroupId
+          AssignPublicIp: ENABLED
+      LoadBalancers:
+        - ContainerName: primary
+          ContainerPort: 80
+          TargetGroupArn: !Ref TargetGroup
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 1
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 1
+        MaximumPercent: 200
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      ExecutionRoleArn: !GetAtt TaskRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: primary
+          Essential: true
+          Image: !Ref Image
+          PortMappings:
+            - ContainerPort: 80
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Sub ${AWS::StackName}
+          Environment:
+            - Name: KRASH_GITHUB_USER
+              Value: !Ref GithubUser
+            - Name: KRASH_GITHUB_TOKEN
+              Value: !Ref GithubToken
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - !ImportValue cfn-utilities:SecretsKeyDecryptPolicyArn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+
+  ScaleDownConfiguration:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: ScaleDownOffHours
+    Properties:
+      MaxCapacity: 1
+      MinCapacity: 0
+      ScheduledActions:
+        # Everyday at 7pm CST
+        - ScheduledActionName: Down
+          StartTime: '2019-11-14T00:00:00Z'
+          EndTime: '2999-01-03T00:00:00Z'
+          ScalableTargetAction:
+            MaxCapacity: 0
+            MinCapacity: 0
+          Schedule: cron(0 1 * * ? *)
+      ResourceId: !Sub service/${Cluster}/${Service.Name}
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService 
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
