@@ -111,7 +111,7 @@ Resources:
           Environment:
             - Name: KRASH_GITHUB_USER
               Value: !Ref GithubUser
-            - Name: KRASH_GITHUB_TOKEN
+            - Name: ENCRYPTED_KRASH_GITHUB_TOKEN
               Value: !Ref GithubToken
 
   TaskRole:
