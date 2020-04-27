@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:sdk AS development
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS development
 WORKDIR /app
 COPY *.csproj .
 RUN dotnet restore
@@ -6,7 +6,7 @@ COPY . .
 RUN dotnet publish -c Release -o out
 CMD ["dotnet", "watch", "run"]
 
-FROM microsoft/dotnet:aspnetcore-runtime
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
 WORKDIR /app
 COPY --from=development /app/out .
 
