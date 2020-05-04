@@ -17,18 +17,12 @@ Parameters:
     NoEcho: true
     Description: OAuth token for the github user
 
-  ScaleDownOffHours:
+  EnableServiceStopping:
     Type: String
-    Description: Whether or not to scale down the app's ECS services down at 7pm
+    Description: Whether or not to turn of services in the krash cluster when development stops.
     AllowedValues:
       - 'true'
       - 'false'
-
-Conditions:
-  ScaleDownOffHours:
-    !Equals 
-      - !Ref ScaleDownOffHours
-      - 'true'
 
 Resources:
   ListenerRule:
@@ -61,6 +55,9 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Ref AWS::StackName
+      Tags:
+        - Key: ENABLE_SERVICE_STOPPING
+          Value: !Ref EnableServiceStopping
   
   Service:
     Type: AWS::ECS::Service
@@ -133,24 +130,4 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-
-  ScaleDownConfiguration:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Condition: ScaleDownOffHours
-    Properties:
-      MaxCapacity: 1
-      MinCapacity: 0
-      ScheduledActions:
-        # Everyday at 7pm CST
-        - ScheduledActionName: Down
-          StartTime: '2019-11-14T00:00:00Z'
-          EndTime: '2999-01-03T00:00:00Z'
-          ScalableTargetAction:
-            MaxCapacity: 0
-            MinCapacity: 0
-          Schedule: cron(0 1 * * ? *)
-      ResourceId: !Sub service/${Cluster}/${Service.Name}
-      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService 
-      ScalableDimension: ecs:service:DesiredCount
-      ServiceNamespace: ecs
-
+      
