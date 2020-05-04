@@ -1,4 +1,4 @@
-Description: Remnisense (memory training/flashcards)
+Description: Github Issues Crash Reporter
 Parameters:
   Image:
     Type: String
@@ -130,4 +130,3 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      
