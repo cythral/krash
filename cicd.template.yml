@@ -294,4 +294,4 @@ Resources:
         - DevRoleArn: !ImportValue cfn-metadata:DevAgentRoleArn
           ProdRoleArn: !ImportValue cfn-metadata:ProdAgentRoleArn
           ApprovalNotificationFunction: !ImportValue cfn-core:ApprovalNotificationFunctionArn
-    
+     
