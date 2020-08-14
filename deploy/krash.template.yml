@@ -21,8 +21,8 @@ Parameters:
     Type: String
     Description: Whether or not to turn of services in the krash cluster when development stops.
     AllowedValues:
-      - 'true'
-      - 'false'
+      - "true"
+      - "false"
 
 Resources:
   ListenerRule:
@@ -55,15 +55,19 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Ref AWS::StackName
+      CapacityProviders:
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 1
       Tags:
         - Key: ENABLE_SERVICE_STOPPING
           Value: !Ref EnableServiceStopping
-  
+
   Service:
     Type: AWS::ECS::Service
     Properties:
       Cluster: !Ref Cluster
-      LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           Subnets: !Split
